@@ -1,14 +1,11 @@
-# Contenido para: dags/elt_medallon_opensky_states.py
 import os
-# import smtplib  # Comentado - Notificación
-# import ssl      # Comentado - Notificación
 import sys
-# from email.message import EmailMessage  # Comentado - Notificación
+
 from pathlib import Path
 
 import pendulum
 from airflow.decorators import dag, task
-# from airflow.sensors.filesystem import FileSensor  # Comentado - Observabilidad
+
 
 # --- Ajuste del path para importar los módulos ---
 PROJECT_ROOT = "/opt/airflow/"

@@ -34,7 +34,7 @@ def transform_bronze_to_silver(
         df.to_parquet(silver_path, index=False)
         return str(silver_path)
 
-    # 1. Limpieza estándar de nombres de columna
+    # Limpieza estándar de nombres de columna
     df.columns = [_clean_column_name(col) for col in df.columns]
 
     # Convertimos la columna 'sensors' (lista) a un string
@@ -43,29 +43,28 @@ def transform_bronze_to_silver(
             lambda value: ",".join(str(item) for item in value) if isinstance(value, (list, tuple)) else None
         )
 
-    # 2. Transformaciones Específicas de OpenSky
-    # ----------------------------------------------------
+    # Transformaciones Específicas de OpenSky
     
-    # --- A. FILTRADO (Eliminación de "Ruido") ---
+    # FILTRADO (Eliminación de "Ruido")
     
-    # 1. Nos quedamos solo con aeronaves que están en el aire
+    # Nos quedamos solo con aeronaves que están en el aire
     df = df[df["on_ground"] == False].copy()
 
-    # 2. Eliminamos registros sin datos de posición
+    # Eliminamos registros sin datos de posición
     df = df.dropna(subset=["longitude", "latitude"])
 
-    # 3. Eliminamos registros sin identificador de vuelo
+    # Eliminamos registros sin identificador de vuelo
     df = df.dropna(subset=["callsign"])
     df = df[df["callsign"] != ""]
 
     
-    # --- B. ENRIQUECIMIENTO  ---
+    # ENRIQUECIMIENTO DE DATOS
     
-    # 4. Conversión de Unidades a estándar de negocio
+    # Conversión de Unidades a estándar de negocio
     df["velocidad_kmh"] = df["velocity"] * 3.6      # Metros/segundo a Kilómetros/hora
     df["altitud_pies"] = df["baro_altitude"] * 3.28084  # Metros a Pies
     
-    # 5. Creación de Categorías
+    # Creación de Categorías
     # Estado del Vuelo (Subiendo, Bajando, Nivelado)
     conditions = [
         df["vertical_rate"] > 1,
@@ -74,7 +73,7 @@ def transform_bronze_to_silver(
     choices = ["Subiendo", "Bajando"]
     df["estado_vuelo"] = np.select(conditions, choices, default="Nivelado")
 
-    # Mapeo de Fuente de Posición (de número a texto)
+    # Mapeo de Fuente de Posición
     pos_map = {
         0: "ADS-B",
         1: "ASTERIX",
@@ -84,19 +83,19 @@ def transform_bronze_to_silver(
     df["fuente_posicion"] = df["position_source"].map(pos_map).fillna("Desconocido")
     
     
-    # --- C. CALIDAD DE DATOS ---
+    # CALIDAD DE DATOS (Limpieza Final)
 
-    # 6. Cálculo de Latencia (diferencia entre la captura y el reporte del avión)
+    # Cálculo de Latencia (diferencia entre la captura y el reporte del avión)
     df["latencia_segundos"] = (df["snapshot_time"] - df["time_position"]).dt.total_seconds()
     
-    # 7. Filtramos registros "viejos" (latencia > 5 minutos)
+    # Filtramos registros "viejos" (latencia > 5 minutos)
     MAX_LATENCY_SECONDS = 300
     df = df[df["latencia_segundos"] <= MAX_LATENCY_SECONDS]
 
-    # 8. Eliminamos duplicados (una observación por avión por snapshot)
+    # Eliminamos duplicados (una observación por avión por snapshot)
     df = df.drop_duplicates(subset=["snapshot_time", "icao24"])
     
-    # 9. Renombramos columnas a Español para el dashboard
+    # Renombramos columnas a Español para el dashboard
     df.rename(columns={
         'latitude': 'latitud',
         'longitude': 'longitud',
@@ -106,15 +105,14 @@ def transform_bronze_to_silver(
     }, inplace=True)
 
     
-    # 3. Selección Final de Columnas
-    # ----------------------------------------------------
+    # Selección Final de Columnas
     
     # Elegimos las columnas que queremos en nuestra capa Silver
     COLUMNAS_SILVER = [
         # Claves e IDs
         "snapshot_time",
         "codigo_aeronave", 
-        "codigo_vuelo",   
+        "codigo_vuelo",    
         "pais_origen",     
         
         # Métricas Limpias (Nuevas Unidades)
@@ -137,8 +135,7 @@ def transform_bronze_to_silver(
     # Filtramos el DataFrame para que solo contenga estas columnas
     df = df[COLUMNAS_SILVER]
 
-    # 4. Guardado en Silver
-    # ----------------------------------------------------
+    # Guardado en Silver
     df.to_parquet(silver_path, index=False)
     
     return str(silver_path)

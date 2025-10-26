@@ -1,4 +1,3 @@
-# Contenido para: elt/dim_aeronave.py
 from pathlib import Path
 import pandas as pd
 
@@ -24,16 +23,16 @@ def build_dim_aeronave(
 
     records: list[dict] = []
 
-    # 1. Definimos las columnas que identifican una aeronave
+    # Definimos las columnas que identifican una aeronave
     cols = ["codigo_aeronave", "pais_origen"]
     available = [col for col in cols if col in df.columns]
 
-    # 2. Nos aseguramos de que la columna clave 'codigo_aeronave' exista
+    # Nos aseguramos de que la columna clave 'codigo_aeronave' exista
     if "codigo_aeronave" in available:
         # Obtenemos el subconjunto de aeronaves únicas
         subset = df.loc[df["codigo_aeronave"].notna(), available].drop_duplicates()
 
-        # 3. Iteramos sobre las aeronaves únicas y las añadimos a 'records'
+        # Iteramos sobre las aeronaves únicas y las añadimos a 'records'
         for row in subset.to_dict(orient="records"):
             records.append(
                 {
@@ -42,20 +41,20 @@ def build_dim_aeronave(
                 }
             )
 
-    # 4. Creamos la dimensión final desde los registros
+    # Creamos la dimensión final desde los registros
     dim = pd.DataFrame(records, columns=["codigo_aeronave", "pais_origen"])
 
-    # 5. Hacemos una limpieza final
+    # Hacemos una limpieza final
     dim.drop_duplicates(subset=["codigo_aeronave"], inplace=True)
     dim.sort_values("codigo_aeronave", inplace=True, ignore_index=True)
 
-    # 6. Añadimos la clave subrogada (id_aeronave)
+    # Añadimos la clave subrogada (id_aeronave)
     dim.reset_index(inplace=True)
     dim.rename(columns={"index": "id_aeronave"}, inplace=True)
     
     # Reordenamos las columnas para que la clave quede primero
     dim = dim[["id_aeronave", "codigo_aeronave", "pais_origen"]]
 
-    # 7. Guardamos el archivo parquet
+    # Guardamos el archivo parquet
     dim.to_parquet(output_path, index=False)
     return str(output_path)

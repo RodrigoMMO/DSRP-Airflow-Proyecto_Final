@@ -1,4 +1,3 @@
-# Contenido para: elt/dim_fuente_posicion.py
 from pathlib import Path
 import pandas as pd
 
@@ -34,7 +33,7 @@ def build_dim_fuente_posicion(
 
     records: list[dict] = []
 
-    # 1. Definimos el "traductor" de descripciones
+    # Definimos el "traductor" de descripciones
     desc_map = {
         "ADS-B": "Reporte directo automático del avión (GPS).",
         "MLAT": "Triangulación por antenas en tierra.",
@@ -43,10 +42,10 @@ def build_dim_fuente_posicion(
         "Desconocido": "Fuente de datos no identificada."
     }
 
-    # 2. Obtenemos las categorías únicas de la columna
+    # Obtenemos las categorías únicas de la columna
     subset = df.loc[df["fuente_posicion"].notna(), ["fuente_posicion"]].drop_duplicates()
 
-    # 3. Iteramos sobre las categorías y las enriquecemos
+    # Iteramos sobre las categorías y las enriquecemos
     for row in subset.to_dict(orient="records"):
         fuente = row.get("fuente_posicion")
         records.append(
@@ -57,18 +56,18 @@ def build_dim_fuente_posicion(
             }
         )
 
-    # 4. Creamos la dimensión final desde los registros
+    # Creamos la dimensión final desde los registros
     dim = pd.DataFrame(records, columns=["fuente_posicion", "descripcion"])
 
-    # 5. Hacemos una limpieza final
+    # Hacemos una limpieza final
     dim.drop_duplicates(subset=["fuente_posicion"], inplace=True)
     dim.sort_values("fuente_posicion", inplace=True, ignore_index=True)
 
-    # 6. Añadimos la clave subrogada (id_fuente)
+    # Añadimos la clave subrogada (id_fuente)
     dim.reset_index(inplace=True)
     dim.rename(columns={"index": "id_fuente"}, inplace=True)
     
-    # 7. Reordenamos las columnas y guardamos
+    # Reordenamos las columnas y guardamos
     dim = dim[DIM_COLUMNS]
     dim.to_parquet(output_path, index=False)
     

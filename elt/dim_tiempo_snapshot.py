@@ -1,4 +1,3 @@
-# Contenido para: elt/dim_tiempo_snapshot.py
 from pathlib import Path
 import pandas as pd
 import numpy as np
@@ -39,30 +38,30 @@ def build_dim_tiempo_snapshot(
         dim.to_parquet(output_path, index=False)
         return str(output_path)
 
-    # 1. Obtenemos un DataFrame con solo los timestamps únicos
+    # Obtenemos un DataFrame con solo los timestamps únicos
     dim = pd.DataFrame(df["snapshot_time"].unique(), columns=["snapshot_time"])
     dim.sort_values("snapshot_time", inplace=True, ignore_index=True)
 
-    # 2. Creamos los atributos de tiempo
+    # Creamos los atributos de tiempo
     dim["fecha"] = dim["snapshot_time"].dt.date
     dim["hora"] = dim["snapshot_time"].dt.hour
     dim["minuto"] = dim["snapshot_time"].dt.minute
 
-    # 3. (NUEVO) Eliminamos duplicados a nivel de minuto, conservando el más reciente
+    # Eliminamos duplicados a nivel de minuto, conservando el más reciente
     dim.drop_duplicates(subset=["fecha", "hora", "minuto"], keep='last', inplace=True, ignore_index=True)
 
-    # 4. (MODIFICADO) Creamos la clave principal (ID) A NIVEL DE MINUTO
+    # Creamos la clave principal (ID) A NIVEL DE MINUTO
     # Se eliminan los segundos ('%S') para que coincida con la granularidad
     dim["id_tiempo_snapshot"] = dim["snapshot_time"].dt.strftime('%Y%m%d%H%M').astype(np.int64)
 
-    # 5. Mapeamos el día de la semana a Español
+    # Mapeamos el día de la semana a Español
     dias_map = {
         0: 'Lunes', 1: 'Martes', 2: 'Miércoles', 3: 'Jueves',
         4: 'Viernes', 5: 'Sábado', 6: 'Domingo'
     }
     dim["dia_semana"] = dim["snapshot_time"].dt.dayofweek.map(dias_map)
 
-    # 6. Creamos la columna 'franja_horaria'
+    # Creamos la columna 'franja_horaria'
     conditions = [
         (dim['hora'] >= 6) & (dim['hora'] <= 11),
         (dim['hora'] >= 12) & (dim['hora'] <= 18),
@@ -72,7 +71,7 @@ def build_dim_tiempo_snapshot(
     choices = ['Mañana', 'Tarde', 'Noche', 'Madrugada']
     dim["franja_horaria"] = np.select(conditions, choices, default='N/A')
     
-    # 7. Ordenamos las columnas y guardamos
+    # Ordenamos las columnas y guardamos
     dim = dim[DIM_COLUMNS]
     dim.to_parquet(output_path, index=False)
     
