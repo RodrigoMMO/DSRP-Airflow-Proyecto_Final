@@ -17,13 +17,13 @@ El flujo de datos sigue la Arquitectura Medallón, asegurando la trazabilidad, c
 
 ```mermaid
 graph TD
-    A[OpenSky API (states/all)] -->|1. Ingesta (JSON)| B(Capa RAW)
-    B -->|2. Consolidación (Parquet)| C(Capa BRONZE)
-    C -->|3. Limpieza y Enriquecimiento| D(Capa SILVER)
-    D -->|4. Modelado (Star Schema)| E(Capa GOLD)
-    E -->|5. Visualización| F(Power BI)
+    A["OpenSky API (states/all)"] -->|"1. Ingesta (JSON)"| B("Capa RAW")
+    B -->|"2. Consolidación (Parquet)"| C("Capa BRONZE")
+    C -->|"3. Limpieza y Enriquecimiento"| D("Capa SILVER")
+    D -->|"4. Modelado (Star Schema)"| E("Capa GOLD")
+    E -->|"5. Visualización"| F("Power BI")
 
-    subgraph Airflow DAG (elt_medallon_opensky_states)
+    subgraph "Airflow DAG (elt_medallon_opensky_states)"
         B
         C
         D
