@@ -35,7 +35,7 @@ graph LR
 Este proyecto utiliza un conjunto de herramientas modernas de ingeniería de datos para construir el pipeline de principio a fin:
 
 * **Orquestación:**
-    * **Apache Airflow (v2.0+):** Utilizado para la orquestación, programación y monitoreo de todo el pipeline. Se implementa la **TaskFlow API** (decoradores `@dag` y `@task`) para una definición de flujos más limpia y moderna.
+    * **Apache Airflow:** Utilizado para la orquestación, programación y monitoreo de todo el pipeline. Se implementa la **TaskFlow API** (decoradores `@dag` y `@task`) para una definición de flujos más limpia y moderna.
 
 * **Fuente de Datos:**
     * **OpenSky Network API**: Es la fuente de datos en vivo (endpoint `/states/all`) que provee los snapshots de tráfico aéreo global.
